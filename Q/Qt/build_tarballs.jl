@@ -100,20 +100,6 @@ EOT
             -opengl dynamic
 		;;
 
-    *arm-linux*)
-        sed -i 's/linux-gnueabi/linux-gnueabihf/g' ../qt-everywhere-src-*/qtbase/mkspecs/linux-arm-gnueabi-g++/qmake.conf
-
-        ../qt-everywhere-src-*/configure QMAKE_LFLAGS=-liconv -platform linux-g++ -xplatform linux-arm-gnueabi-g++ -device-option CROSS_COMPILE=${BIN_DIR}/${target}- \
-            -extprefix $prefix $commonoptions \
-            -skip qtwinextras -fontconfig -sysroot /opt/$target/bin/../$target/sys-root
-        ;;
-
-    *aarch64-linux*)
-        ../qt-everywhere-src-*/configure QMAKE_LFLAGS=-liconv -platform linux-g++ -xplatform linux-aarch64-gnu-g++ -device-option CROSS_COMPILE=${BIN_DIR}/${target}- \
-            -extprefix $prefix $commonoptions \
-            -skip qtwinextras -fontconfig -sysroot /opt/$target/bin/../$target/sys-root
-        ;;
-
     *i686-linux*)
         cp -a ../qt-everywhere-src-*/qtbase/mkspecs/linux-aarch64-gnu-g++ $qtsrcdir/qtbase/mkspecs/linux-i686-bb
         sed -i 's/aarch64-/i686-/g' ../qt-everywhere-src-*/qtbase/mkspecs/linux-i686-bb/qmake.conf
@@ -137,14 +123,6 @@ EOT
             -skip qtwinextras -fontconfig -sysroot /opt/$target/bin/../$target/sys-root
 		;;
 
-    *powerpc64le-linux*)
-        cp -a ../qt-everywhere-src-*/qtbase/mkspecs/linux-aarch64-gnu-g++ $qtsrcdir/qtbase/mkspecs/linux-ppc64-bb
-        sed -i 's/aarch64-/powerpc64le-/g' ../qt-everywhere-src-*/qtbase/mkspecs/linux-ppc64-bb/qmake.conf
-
-        ../qt-everywhere-src-*/configure QMAKE_LFLAGS="-liconv -Wl,-rpath-link,/opt/${target}/${target}/sys-root/lib64" -platform linux-g++ -xplatform linux-ppc64-bb -device-option CROSS_COMPILE=${BIN_DIR}/${target}- \
-            -extprefix $prefix $commonoptions \
-            -skip qtwinextras -fontconfig -sysroot /opt/$target/bin/../$target/sys-root
-		;;
 esac
 
 make -j${nproc}
@@ -155,12 +133,9 @@ install_license $WORKSPACE/srcdir/qt-everywhere-src-*/LICENSE.LGPLv3
 # These are the platforms we will build for by default, unless further
 # platforms are passed in on the command line
 platforms_linux = [
-    Platform("aarch64", "linux"; libc="glibc"),
-    Platform("armv7l", "linux"; libc="glibc"),
     Platform("x86_64", "linux"; libc="glibc"),
     Platform("i686", "linux"; libc="glibc"),
     Platform("x86_64", "freebsd"),
-    Platform("powerpc64le", "linux"; libc="glibc"),
 ]
 platforms_linux = expand_cxxstring_abis(platforms_linux)
 platforms_win = expand_cxxstring_abis([Platform("x86_64", "windows"), Platform("i686", "windows")])
