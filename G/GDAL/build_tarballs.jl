@@ -21,12 +21,15 @@ if [[ ${target} == *mingw* ]]; then
     autoreconf -vi
     export PROJ_LIBS="proj_7_2"
 elif [[ "${target}" == *-linux-* ]]; then
-    # Make sure GEOS is linked against libstdc++
-     atomic_patch -p1 "$WORKSPACE/srcdir/patches/geos-m4-extra-libs.patch"
-     atomic_patch -p1 "$WORKSPACE/srcdir/patches/configure_ac_curl_libs.patch"
-    export EXTRA_GEOS_LIBS="-lstdc++"
-    export EXTRA_CURL_LIBS="-lstdc++"
-    export LDFLAGS="$LDFLAGS -lstdc++"
+    # Hint to find libstdc++, required to link against C++ libs when using C compiler
+    if [[ "${nbits}" == 32 ]]; then
+        export CFLAGS="-Wl,-rpath-link,/opt/${target}/${target}/lib"
+    else
+        export CFLAGS="-Wl,-rpath-link,/opt/${target}/${target}/lib64"
+    fi
+    # Use same flags also for GEOS
+    atomic_patch -p1 "$WORKSPACE/srcdir/patches/geos-m4-extra-cflags.patch"
+    export EXTRA_GEOS_CFLAGS="${CFLAGS}"
     if [[ "${target}" == powerpc64le-* ]]; then
         atomic_patch -p1 "$WORKSPACE/srcdir/patches/sqlite3-m4-extra-libs.patch"
         export EXTRA_GEOS_LIBS="${EXTRA_GEOS_LIBS} -lm"
@@ -44,6 +47,8 @@ rm -f ${prefix}/lib/*.la
 ./configure --prefix=$prefix --host=$target \
     --with-geos=${bindir}/geos-config \
     --with-proj=$prefix \
+    --with-tiff=$prefix \
+    --with-geotiff=$prefix \
     --with-libz=$prefix \
     --with-expat=$prefix \
     --with-zstd=$prefix \
@@ -103,6 +108,8 @@ dependencies = [
     Dependency("OpenJpeg_jll"),
     Dependency("Expat_jll"),
     Dependency("Zstd_jll"),
+    Dependency("Libtiff_jll"),
+    Dependency("libgeotiff_jll"),
     # The following libraries are dependencies of LibCURL_jll which is now a
     # stdlib, but the stdlib doesn't explicitly list its dependencies
     Dependency("LibSSH2_jll", v"1.9.0"),
